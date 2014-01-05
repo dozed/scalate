@@ -224,6 +224,7 @@
     <module>scalate-jruby</module>
     <module>scalate-pegdown</module>
     <module>scalate-less</module>
+    <module>scalate-template-types</module>
   </modules>
 
 
