@@ -21,22 +21,26 @@ object generateType {
     }
   }
 
-  def templateType(source: TemplateSource): AnyRef = macro templateType_impl
+  def templateType(tpl: String): AnyRef = macro templateType_impl
 
-  def templateType_impl(c: Context)(source: c.Expr[TemplateSource]): c.Expr[AnyRef] = {
+  def templateType_impl(c: Context)(tpl: c.Expr[String]): c.Expr[AnyRef] = {
     import c.universe._
-
-    // extract list of parameters from template source -> parses twice
-    val extracted = attributes(source.splice.text)
 
     // construct list of parameters and refs
     val valParams = ListBuffer[ValDef]()
-    val refs = ListBuffer[Ident]()
-    extracted foreach {
+    val mapEntries = ListBuffer[Tree]()
+
+    // extract filename string literal
+    val Literal(Constant(fileName: String)) = tpl.tree
+    // TODO load resource
+    val source = TemplateSource.fromFile(fileName)
+
+    // build list of params and map entries
+    attributes(source.text) foreach {
       a =>
         val name = newTermName(a.name.value)
 
-        // build type -> support more types
+        // build type -> support more types, default arguments
         val tpe = a.className.value match {
           case "String" => typeOf[String]
           case "Int" => typeOf[Int]
@@ -44,35 +48,23 @@ object generateType {
         }
 
         valParams += ValDef(Modifiers(Flag.PARAM), name, TypeTree(tpe), EmptyTree)
-        refs += Ident(name)
+        mapEntries += reify(c.Expr[String](Literal(Constant(a.name.value))).splice -> c.Expr[Any](Ident(name)).splice).tree
     }
 
-    // build list of attributes
-    val map1: Map[String, c.Expr[Any]] = refs map { ref => ref.name.decoded -> reify(c.Expr[Any](ref).splice) } toMap
+    // build attributes map tree
+    val mapApply = Select(reify(Map).tree, newTermName("apply"))
+    val map = c.Expr[Map[String, Any]](Apply(mapApply, mapEntries.toList))
 
-    // construct body of method -> layout
+    // construct layout tree
     val rhs = reify {
-      val str = te.layout(source.splice, map1)
+      val source = TemplateSource.fromFile(tpl.splice)
+      val str = te.layout(source, map.splice)
       str
     }
 
-    // create function
-
-
-    //  Expr(Function(
-    //    List(ValDef(Modifiers(PARAM), newTermName("a"), Ident(scala.Int), EmptyTree),
-    //      ValDef(Modifiers(PARAM), newTermName("b"), Ident(scala.Int), EmptyTree)),
-    //    Literal(Constant(()))))
-
-
-    val defdef = DefDef(Modifiers(), c.fresh(newTermName("templateType$")), List(), List(valParams.toList), TypeTree(), rhs.tree)
-
-    // what type to return?
-    // (String, String, ...) => Int
-    // Function
-
-//    c.Expr(defdef)
-    c.Expr[Unit](Literal(Constant()))
+    // create and return function
+    // c.Expr[Unit](Literal(Constant()))
+    c.Expr[AnyRef](Function(valParams.toList, rhs.tree))
   }
 
 }

@@ -5,30 +5,23 @@ import org.fusesource.scalate.TemplateSource
  */
 object test extends App {
 
-  val source = TemplateSource.fromFile(getClass.getResource("/tpl1.jade").getFile)
-  //val fn = generateType.templateType(source)
-
+  val fn: (String, Int) => String = generateType.templateType("/home/stefan/Code/funk/scalate/scalate-template-types/target/classes/tpl1.jade")
+  println(fn("test", 123))
 
   import scala.reflect.runtime.universe._
-  println(showRaw(reify {
-    (a: Int, b: Int) => ""
-  }))
+  println(showRaw(reify { Map("a" -> "b", "c" -> "d") }))
 
-//  println(showRaw(reify {
-//    (a: Int, b: Int) => {
-//    }
-//  }))
+  val function = (a: Int, b: Int) => ""
+  def functionDef(a: Int, b: Int) = ""
+  val block = { "string" }
+
+
 //  Expr(Function(
 //    List(ValDef(Modifiers(PARAM), newTermName("a"), Ident(scala.Int), EmptyTree),
 //      ValDef(Modifiers(PARAM), newTermName("b"), Ident(scala.Int), EmptyTree)),
 //    Literal(Constant(()))))
 
 
-//  println(showRaw(reify {
-//    def render(a: String, b: Int): String = { "" }
-//    render _
-//  }))
-//
 //  Expr(Block(List(
 //    DefDef(Modifiers(), newTermName("render"), List(), List(
 //      List(ValDef(Modifiers(PARAM), newTermName("a"), Select(Ident(scala.Predef), newTypeName("String")), EmptyTree),
@@ -38,9 +31,6 @@ object test extends App {
 //      ValDef(Modifiers(PARAM | SYNTHETIC), newTermName("b"), TypeTree(), EmptyTree)),
 //      Apply(Ident(newTermName("render")), List(Ident(newTermName("a")), Ident(newTermName("b")))))
 //  )))
-//
-//    render _
-//  }))
 
 
 }
