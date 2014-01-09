@@ -8,6 +8,9 @@ object test extends App {
   val fn: (String, Int) => String = generateType.templateType("/home/stefan/Code/funk/scalate/scalate-template-types/target/classes/tpl1.jade")
   println(fn("test", 123))
 
+  val fn2 = generateType.templateType("/home/stefan/Code/funk/scalate/scalate-template-types/target/classes/tpl2.jade")
+  println(fn2("a", "b", "c"))
+
   import scala.reflect.runtime.universe._
   println(showRaw(reify { Map("a" -> "b", "c" -> "d") }))
 
